@@ -1,0 +1,1 @@
+export { AssinaturaDetail  } from "./AssinaturaDetail";
