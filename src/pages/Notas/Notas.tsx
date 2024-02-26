@@ -138,17 +138,19 @@ export const Notas: React.FC = () => {
                   key={"download"}
                   icon={<DownloadOutlined />}
                   size="large"
-                  onClick={() => {
-                    if (item.base64) {
-                      openPdf(item.base64);
-                    } else {
-                      messageApi.open({
-                        type: "error",
-                        content: "Arquivo de nota não disponível",
-                        icon: <AlertOutlined />,
-                      });
-                    }
-                  }}
+                  download={`nota_${item.date}.pdf`}
+                  // onClick={() => {
+                  //   if (item.base64) {
+                  //     openPdf(item.base64);
+                  //   } else {
+                  //     messageApi.open({
+                  //       type: "error",
+                  //       content: "Arquivo de nota não disponível",
+                  //       icon: <AlertOutlined />,
+                  //     });
+                  //   }
+                  // }}
+                  href={`data:application/pdf;base64,${item.base64}`}
                 >
                   Baixar nota
                 </Button>,
