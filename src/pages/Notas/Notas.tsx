@@ -25,7 +25,7 @@ export const Notas: React.FC = () => {
   const [notas, setNotas] = useState<Nota[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
-
+  const [noteLoading, setNoteLoading] = useState<number[]>([]);
   // const openPdf = (base64: string) => {
   //   // Converte a string Base64 em um Blob
   //   const blob = b64toBlob(base64, "application/pdf");
@@ -125,6 +125,7 @@ export const Notas: React.FC = () => {
                 item.XMLENVCLI.split("<vNF>")[1].split("</vNF>")[0]
               ),
               base64: item.base64,
+              NUNOTA: item.NUNOTA,
             };
           })}
           loading={refreshing}
@@ -132,6 +133,7 @@ export const Notas: React.FC = () => {
             valor: number;
             date: string;
             base64: string | null;
+            NUNOTA: number;
           }) => (
             <List.Item
               actions={[
@@ -141,16 +143,38 @@ export const Notas: React.FC = () => {
                   icon={<DownloadOutlined />}
                   size="large"
                   // download={`nota_${item.date}.pdf`}
+                  loading={noteLoading.includes(item.NUNOTA)}
                   onClick={() => {
-                    if (item.base64) {
-                      window.open(`data:application/pdf;base64,${item.base64}`,"_blank");
-                    } else {
-                      messageApi.open({
-                        type: "error",
-                        content: "Arquivo de nota não disponível",
-                        icon: <AlertOutlined />,
+                    setNoteLoading([...noteLoading, item.NUNOTA]);
+                    api
+                      .get(`contrato/note/${item.NUNOTA}`)
+                      .then((response) => {
+                        if (response.data) {
+                          window.open(
+                            `${import.meta.env.VITE_API_URL}contrato/note/${
+                              item.NUNOTA
+                            }`,
+                            "_blank"
+                          );
+                        } else {
+                          messageApi.error({
+                            content: "Nota não encontrada",
+                            icon: <AlertOutlined />,
+                          });
+                        }
+                      })
+                      .catch((error) => {
+                        errorActions(error);
+                        messageApi.error({
+                          content: "Nota não encontrada",
+                          icon: <AlertOutlined />,
+                        });
+                      })
+                      .finally(() => {
+                        setNoteLoading(
+                          noteLoading.filter((note) => note !== item.NUNOTA)
+                        );
                       });
-                    }
                   }}
                 >
                   Baixar nota
