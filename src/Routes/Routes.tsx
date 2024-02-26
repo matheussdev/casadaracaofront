@@ -12,6 +12,7 @@ import { Notas } from "../pages/Notas";
 import { Assinaturas } from "../pages/Assinaturas";
 import { AssinaturaDetail } from "../pages/AssinaturaDetail";
 import { Items } from "../pages/items";
+import { Register } from "../pages/Register";
 
 interface MiddlewareProps {
   children: React.ReactNode;
@@ -106,6 +107,9 @@ export function Navigation() {
         )}
         <Route path="/login" element={<LoginRoute />}>
           <Route path="/login" element={<Login />} />
+        </Route>
+        <Route path="/registrar" element={<LoginRoute />}>
+          <Route path="/registrar" element={<Register />} />
         </Route>
         <Route path="*" element={<>not found</>} />
       </Routes>

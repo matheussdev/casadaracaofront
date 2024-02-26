@@ -6,17 +6,22 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { MaskCpfCnpj } from "../../utils/MaskCpfCnpj";
 
-export const Login: React.FC = () => {
+export const Register: React.FC = () => {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const form = useRef<FormInstance>(null);
 
-  const handleSubmit = (e: { login: string; password: string }) => {
+  const handleSubmit = (e: { login: string; password: string, repassword: string }) => {
     setError("");
     setLoading(true);
-    login({
+    if (e.password !== e.repassword) {
+      setError("As senhas não conferem!");
+      setLoading(false);
+      return;
+    }
+    register({
       username: MaskCpfCnpj.desformatar(e.login),
       password: e.password,
     })
@@ -24,7 +29,7 @@ export const Login: React.FC = () => {
         navigate("/");
       })
       .catch((error) => {
-        setError(error || "Erro ao logar!");
+        setError(error || "Erro ao criar acesso!");
       })
       .finally(() => {
         setLoading(false);
@@ -37,8 +42,8 @@ export const Login: React.FC = () => {
         <img src={Logo2} alt="Logo" />
       </S.LogoContainer>
       <S.FormContainer>
-        <h1>Bem vindo(a)</h1>
-        <h3>Faça login com seus dados para acessar</h3>
+        <h1>Cadastre-se</h1>
+        <h3>Digite seu cpf e crie uma nova senha.</h3>
         <Form
           ref={form}
           layout={"vertical"}
@@ -77,6 +82,13 @@ export const Login: React.FC = () => {
               placeholder="Digite sua senha"
             />
           </Form.Item>
+          <Form.Item name="repassword" label="Confirmar Senha" style={{ marginBottom: 16 }}>
+            <Input.Password
+              size="large"
+              required
+              placeholder="Digite sua senha novamente"
+            />
+          </Form.Item>
           <Form.Item>
             <Button
               type="primary"
@@ -89,21 +101,21 @@ export const Login: React.FC = () => {
                 marginTop: 8,
               }}
             >
-              Entrar
+              Criar conta
             </Button>
           </Form.Item>
 
           <Form.Item>
             <span>
-              Não tem uma conta?
+              possui uma conta?{" "}
               <Button
                 type="link"
-                onClick={() => navigate("/registrar")}
+                onClick={() => navigate("/login")}
                 style={{
                   cursor: "pointer",
                 }}
               >
-                Clique aqui
+                Faça login
               </Button>
             </span>
           </Form.Item>

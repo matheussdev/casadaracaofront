@@ -28,6 +28,7 @@ interface LoginParams {
 interface AuthContextData {
   user: User | null;
   login: (params: LoginParams) => Promise<LoginResponse>;
+  register: (params: LoginParams) => Promise<LoginResponse>;
   loadingUserData: boolean;
   initialGet: () => Promise<void>;
 }
@@ -84,11 +85,33 @@ export function AuthProvider({ children }: Readonly<AuthProviderProps>) {
     },
     []
   );
+  const register = useCallback(
+    async (params: LoginParams): Promise<LoginResponse> => {
+      return new Promise<LoginResponse>((resolve, reject) => {
+        api
+          .post(`/auth/first_access`, params)
+          .then((response) => {
+            setLogin(response.data.access_token);
+            localStorage.setItem("@casa_da_racao_user", JSON.stringify({
+              name: response.data.name,
+              cpf : response.data.cgc_cpf,
+            }));
+            setUser(response.data.user);
+            resolve(response.data);
+          })
+          .catch((error) => {
+            reject(error?.response?.data.detail || "Erro ao logar!");
+          });
+      });
+    },
+    []
+  );
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        register,
         login,
         loadingUserData,
         initialGet,
