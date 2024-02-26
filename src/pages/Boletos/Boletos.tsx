@@ -6,7 +6,7 @@ import { errorActions } from "../../utils/errorActions";
 import dayjs from "dayjs";
 import { currency } from "../../utils";
 import { FaFileInvoiceDollar } from "react-icons/fa";
-
+const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
 function verifyStatusByDate(date: string, pago?: string) {
   if (pago) {
     return {
@@ -48,10 +48,23 @@ export const Boletos: React.FC = () => {
 
   const getBoletos = useCallback(() => {
     setLoadingBills(true);
+    const cache = localStorage.getItem("boletos_in_cache");
+    if (cache) {
+      const { boletos, date } = JSON.parse(cache);
+      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+        setBoletos(boletos);
+        setLoadingBills(false);
+        return;
+      }
+    }
     api
       .get("/boleto/")
       .then((response) => {
         setBoletos(response.data);
+        localStorage.setItem(
+          "boletos_in_cache",
+          JSON.stringify({ boletos: response.data, date: dayjs().format("DDMMYYYY HH:mm:ss") })
+        );
       })
       .catch((error) => {
         console.log(error);

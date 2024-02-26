@@ -16,7 +16,7 @@ import {
 import { Pie } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, ToolChart, Legend);
-
+const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
 const { Text, Title } = Typography;
 interface Boleto {
   CODEMP: number;
@@ -59,10 +59,26 @@ export const Home: React.FC = () => {
 
   const getItems = useCallback(() => {
     setLoadingItems(true);
+    const cache = localStorage.getItem("items_in_cache");
+    if (cache) {
+      const { items, date } = JSON.parse(cache);
+      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+        setItems(items);
+        setLoadingItems(false);
+        return;
+      }
+    }
     api
       .get("/item/")
       .then((response) => {
         setItems(response.data);
+        localStorage.setItem(
+          "items_in_cache",
+          JSON.stringify({
+            items: response.data,
+            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+          })
+        );
       })
       .catch((error) => {
         console.log(error);
@@ -74,6 +90,34 @@ export const Home: React.FC = () => {
 
   const getBoletos = useCallback(() => {
     setLoadingBills(true);
+    const cache = localStorage.getItem("boletos_in_cache");
+    if (cache) {
+      const { boletos, date } = JSON.parse(cache);
+      if (
+        dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
+      ) {
+        setBillResume({
+          open: boletos.filter((boleto: Boleto) => {
+            return (
+              boleto.DHBAIXA === null &&
+              dayjs(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(dayjs())
+            );
+          }).length,
+          paid: boletos.filter((x: Boleto) => {
+            return x.DHBAIXA !== null;
+          }).length,
+          due: boletos.filter((boleto: Boleto) => {
+            return (
+              boleto.DHBAIXA === null &&
+              dayjs(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(dayjs())
+            );
+          }).length,
+          total: boletos.length,
+        });
+        setLoadingBills(false);
+        return;
+      }
+    }
     api
       .get("/boleto/")
       .then((response) => {
@@ -95,6 +139,13 @@ export const Home: React.FC = () => {
           }).length,
           total: response.data.length,
         });
+        localStorage.setItem(
+          "boletos_in_cache",
+          JSON.stringify({
+            boletos: response.data,
+            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+          })
+        );
       })
       .catch((error) => {
         console.log(error);
@@ -197,7 +248,7 @@ export const Home: React.FC = () => {
                 datasets: [
                   {
                     label: "Boletos",
-                    data: [billResume.paid,billResume.open, billResume.due],
+                    data: [billResume.paid, billResume.open, billResume.due],
                     backgroundColor: ["#64C280", "#4299E1", "#E53E3E"],
                     borderColor: ["#64C280", "#4299E1", "#E53E3E"],
                     borderWidth: 1,
@@ -256,19 +307,23 @@ export const Home: React.FC = () => {
               >
                 <List.Item.Meta
                   title={item.name}
-                  description={<div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                    }}
-                  >
-                    <span>
-                      {dayjs(item.date, "DDMMYYYY").format("DD/MM/YYYY")}
-                    </span>
-                    <Tag color={'green'}>
-                      {item.category.length > 15 ? item.category.substring(0, 15)+ "..." : item.category}
-                    </Tag>
-                  </div>}
+                  description={
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                      }}
+                    >
+                      <span>
+                        {dayjs(item.date, "DDMMYYYY").format("DD/MM/YYYY")}
+                      </span>
+                      <Tag color={"green"}>
+                        {item.category.length > 15
+                          ? item.category.substring(0, 15) + "..."
+                          : item.category}
+                      </Tag>
+                    </div>
+                  }
                 />
               </List.Item>
             )}

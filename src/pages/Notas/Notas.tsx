@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GlobalWrapper } from "../../components/GlobalWrapper";
 import { Avatar, Button, List, Typography, message } from "antd";
 import api from "../../services/api";
@@ -9,7 +9,7 @@ import { FaFileInvoice } from "react-icons/fa";
 import { AlertOutlined, DownloadOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
-
+const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
 interface Nota {
   CODEMP: number;
   CODPARC: number;
@@ -60,7 +60,7 @@ export const Notas: React.FC = () => {
     const cache = localStorage.getItem("notas_in_cache");
     if (cache) {
       const { notas, date } = JSON.parse(cache);
-      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < 1) {
+      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
         setNotas(notas);
         setRefreshing(false);
         return;
@@ -86,9 +86,13 @@ export const Notas: React.FC = () => {
         setRefreshing(false);
       });
   }, []);
-
+  const hasUpdated = useRef(false);
   useEffect(() => {
-    getNotas();
+    if (!hasUpdated.current) {
+      hasUpdated.current = true;
+      getNotas();
+      return;
+    }
   }, [getNotas]);
 
   return (

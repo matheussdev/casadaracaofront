@@ -62,6 +62,8 @@ interface Item {
   NUNOTA: number;
   VLRUNIT: number;
 }
+const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
+
 export const Items: React.FC = () => {
   const [loadingBills, setLoadingBills] = React.useState(false);
   const [boletos, setBoletos] = React.useState<Boleto[]>([]);
@@ -106,7 +108,13 @@ export const Items: React.FC = () => {
         {
           label: "Valor Total por Grupo de Produto",
           data,
-          backgroundColor: ["#E53E3E", "#4299E1", "#64C280", "yellow", "purple"],
+          backgroundColor: [
+            "#E53E3E",
+            "#4299E1",
+            "#64C280",
+            "yellow",
+            "purple",
+          ],
           borderColor: ["#E53E3E", "#4299E1", "#64C280", "yellow", "purple"],
           borderWidth: 1,
         },
@@ -115,10 +123,26 @@ export const Items: React.FC = () => {
   };
   const getItems = useCallback(() => {
     setLoadingItems(true);
+    const cache = localStorage.getItem("items_in_cache");
+    if (cache) {
+      const { items, date } = JSON.parse(cache);
+      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+        setItems(items);
+        setLoadingItems(false);
+        return;
+      }
+    }
     api
       .get("/item/")
       .then((response) => {
         setItems(response.data);
+        localStorage.setItem(
+          "items_in_cache",
+          JSON.stringify({
+            items: response.data,
+            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+          })
+        );
       })
       .catch((error) => {
         console.log(error);
@@ -139,7 +163,9 @@ export const Items: React.FC = () => {
       (a, b) => new Date(a).getTime() - new Date(b).getTime()
     );
 
-    const labels = sortedDates.map((date) => dayjs(date, "DDMMYYYY HH:mm:ss").format("DD/MM/YY"));
+    const labels = sortedDates.map((date) =>
+      dayjs(date, "DDMMYYYY HH:mm:ss").format("DD/MM/YY")
+    );
 
     const data = sortedDates.map((date) => groupedBoletos[date]);
 
@@ -159,10 +185,26 @@ export const Items: React.FC = () => {
 
   const getBoletos = useCallback(() => {
     setLoadingBills(true);
+    const cache = localStorage.getItem("boletos_in_cache");
+    if (cache) {
+      const { boletos, date } = JSON.parse(cache);
+      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+        setBoletos(boletos);
+        setLoadingBills(false);
+        return;
+      }
+    }
     api
       .get("/boleto/")
       .then((response) => {
         setBoletos(response.data);
+        localStorage.setItem(
+          "boletos_in_cache",
+          JSON.stringify({
+            boletos: response.data,
+            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+          })
+        );
       })
       .catch((error) => {
         console.log(error);
@@ -173,9 +215,15 @@ export const Items: React.FC = () => {
       });
   }, []);
 
+  const hasUpdated = React.useRef(false);
+
   useEffect(() => {
-    getBoletos();
-    getItems();
+    if (!hasUpdated.current) {
+      hasUpdated.current = true;
+      getBoletos();
+      getItems();
+      return;
+    }
   }, [getBoletos, getItems]);
 
   return (

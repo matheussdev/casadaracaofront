@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GlobalWrapper } from "../../components/GlobalWrapper";
 import { Avatar, Button, List, Tag, Typography } from "antd";
 import api from "../../services/api";
@@ -6,6 +6,7 @@ import { errorActions } from "../../utils/errorActions";
 import dayjs from "dayjs";
 import { FaFileSignature } from "react-icons/fa";
 import { Link } from "react-router-dom";
+const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
 
 const { Title } = Typography;
 
@@ -27,10 +28,26 @@ export const Assinaturas: React.FC = () => {
 
   const getNotas = useCallback(() => {
     setRefreshing(true);
+    const cache = localStorage.getItem("contracts_in_cache");
+    if (cache) {
+      const { contracts, date } = JSON.parse(cache);
+      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+        setContracts(contracts);
+        setRefreshing(false);
+        return;
+      }
+    }
     api
       .get("/contrato/")
       .then((response) => {
         setContracts(response.data);
+        localStorage.setItem(
+          "contracts_in_cache",
+          JSON.stringify({
+            contracts: response.data,
+            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+          })
+        );
       })
       .catch((error) => {
         console.log(error);
@@ -40,9 +57,13 @@ export const Assinaturas: React.FC = () => {
         setRefreshing(false);
       });
   }, []);
-
+  const hasUpdated = useRef(false);
   useEffect(() => {
-    getNotas();
+    if (!hasUpdated.current) {
+      hasUpdated.current = true;
+      getNotas();
+      return;
+    }
   }, [getNotas]);
 
   return (
