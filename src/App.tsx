@@ -7,11 +7,9 @@ dayjs.locale("pt-br");
 
 function App() {
   return (
-    <>
-      <AuthProvider>
+    <AuthProvider>
         <Navigation />
       </AuthProvider>
-    </>
   );
 }
 
