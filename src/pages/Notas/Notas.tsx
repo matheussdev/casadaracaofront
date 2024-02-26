@@ -150,7 +150,7 @@ export const Notas: React.FC = () => {
                       .then((response) => {
                         if (response.data) {
                           const link = document.createElement("a");
-                          link.href = `${import.meta.env.VITE_API_URL}contrato/note/${
+                          link.href = `${import.meta.env.VITE_API_URL}/contrato/note/${
                             item.NUNOTA
                           }`;
                           document.body.appendChild(link);
