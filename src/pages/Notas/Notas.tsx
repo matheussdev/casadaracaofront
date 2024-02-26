@@ -142,7 +142,6 @@ export const Notas: React.FC = () => {
                   key={"download"}
                   icon={<DownloadOutlined />}
                   size="large"
-                  // download={`nota_${item.date}.pdf`}
                   loading={noteLoading.includes(item.NUNOTA)}
                   onClick={() => {
                     setNoteLoading([...noteLoading, item.NUNOTA]);
@@ -150,12 +149,12 @@ export const Notas: React.FC = () => {
                       .get(`contrato/note/${item.NUNOTA}`)
                       .then((response) => {
                         if (response.data) {
-                          window.open(
-                            `${import.meta.env.VITE_API_URL}contrato/note/${
-                              item.NUNOTA
-                            }`,
-                            "_blank"
-                          );
+                          const link = document.createElement("a");
+                          link.href = `${import.meta.env.VITE_API_URL}contrato/note/${
+                            item.NUNOTA
+                          }`;
+                          document.body.appendChild(link);
+                          link.click();
                         } else {
                           messageApi.error({
                             content: "Nota não encontrada",
