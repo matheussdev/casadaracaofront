@@ -60,7 +60,9 @@ export const Notas: React.FC = () => {
     const cache = localStorage.getItem("notas_in_cache");
     if (cache) {
       const { notas, date } = JSON.parse(cache);
-      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (
+        dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
+      ) {
         setNotas(notas);
         setRefreshing(false);
         return;
@@ -138,19 +140,18 @@ export const Notas: React.FC = () => {
                   key={"download"}
                   icon={<DownloadOutlined />}
                   size="large"
-                  download={`nota_${item.date}.pdf`}
-                  // onClick={() => {
-                  //   if (item.base64) {
-                  //     openPdf(item.base64);
-                  //   } else {
-                  //     messageApi.open({
-                  //       type: "error",
-                  //       content: "Arquivo de nota não disponível",
-                  //       icon: <AlertOutlined />,
-                  //     });
-                  //   }
-                  // }}
-                  href={`data:application/pdf;base64,${item.base64}`}
+                  // download={`nota_${item.date}.pdf`}
+                  onClick={() => {
+                    if (item.base64) {
+                      window.open(`data:application/pdf;base64,${item.base64}`,"_blank");
+                    } else {
+                      messageApi.open({
+                        type: "error",
+                        content: "Arquivo de nota não disponível",
+                        icon: <AlertOutlined />,
+                      });
+                    }
+                  }}
                 >
                   Baixar nota
                 </Button>,
