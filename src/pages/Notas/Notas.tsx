@@ -3,10 +3,10 @@ import { GlobalWrapper } from "../../components/GlobalWrapper";
 import { Avatar, Button, List, Typography, message } from "antd";
 import api from "../../services/api";
 import { errorActions } from "../../utils/errorActions";
-import dayjs from "dayjs";
 import { currency } from "../../utils";
 import { FaFileInvoice } from "react-icons/fa";
 import { AlertOutlined, DownloadOutlined } from "@ant-design/icons";
+import moment from "moment";
 
 const { Title } = Typography;
 const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
@@ -61,7 +61,7 @@ export const Notas: React.FC = () => {
     if (cache) {
       const { notas, date } = JSON.parse(cache);
       if (
-        dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
+        moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
       ) {
         setNotas(notas);
         setRefreshing(false);
@@ -76,7 +76,7 @@ export const Notas: React.FC = () => {
           "notas_in_cache",
           JSON.stringify({
             notas: response.data,
-            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+            date: moment().format("DDMMYYYY HH:mm:ss"),
           })
         );
       })
@@ -194,7 +194,7 @@ export const Notas: React.FC = () => {
                   />
                 }
                 title={currency(item.valor)}
-                description={dayjs(item.date, "DDMMYYYY").format("DD/MM/YYYY")}
+                description={moment(item.date, "DDMMYYYY HH:mm:ss").format("DD/MM/YYYY")}
               />
             </List.Item>
           )}

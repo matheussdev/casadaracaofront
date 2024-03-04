@@ -6,6 +6,9 @@ import { theme } from "./theme/index.ts";
 import { ThemeProvider } from "styled-components";
 import GlobalStyle from "./theme/GlobalStyles.ts";
 import pt_BR from 'antd/es/locale/pt_BR';
+import moment from 'moment'
+import 'moment/locale/pt-br'
+moment.locale('pt-br')
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

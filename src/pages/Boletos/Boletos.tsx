@@ -3,9 +3,9 @@ import { GlobalWrapper } from "../../components/GlobalWrapper";
 import { Avatar, List, Tag, Typography } from "antd";
 import api from "../../services/api";
 import { errorActions } from "../../utils/errorActions";
-import dayjs from "dayjs";
 import { currency } from "../../utils";
 import { FaFileInvoiceDollar } from "react-icons/fa";
+import moment from "moment";
 const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
 function verifyStatusByDate(date: string, pago?: string) {
   if (pago) {
@@ -13,7 +13,7 @@ function verifyStatusByDate(date: string, pago?: string) {
       color: "#38A169",
       text: "Pago",
     };
-  } else if (dayjs(date, "DDMMYYYY HH:mm:ss").isBefore(dayjs())) {
+  } else if (moment(date, "DDMMYYYY HH:mm:ss").isBefore(moment())) {
     return {
       color: "#FF0000",
       text: "Vencido",
@@ -51,7 +51,7 @@ export const Boletos: React.FC = () => {
     const cache = localStorage.getItem("boletos_in_cache");
     if (cache) {
       const { boletos, date } = JSON.parse(cache);
-      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (moment().diff(moment(date, "DD/MM/YYYY HH:mm:ss"), "minute") < time_cache) {
         setBoletos(boletos);
         setLoadingBills(false);
         return;
@@ -63,7 +63,7 @@ export const Boletos: React.FC = () => {
         setBoletos(response.data);
         localStorage.setItem(
           "boletos_in_cache",
-          JSON.stringify({ boletos: response.data, date: dayjs().format("DDMMYYYY HH:mm:ss") })
+          JSON.stringify({ boletos: response.data, date: moment().format("DD/MM/YYYY HH:mm:ss") })
         );
       })
       .catch((error) => {
@@ -133,7 +133,7 @@ export const Boletos: React.FC = () => {
                   />
                 }
                 title={currency(item.valor)}
-                description={dayjs(item.due, "DDMMYYYY").format("DD/MM/YYYY")}
+                description={moment(item.due, "DDMMYYYY HH:mm:ss").format("DD/MM/YYYY")}
               />
             </List.Item>
           )}

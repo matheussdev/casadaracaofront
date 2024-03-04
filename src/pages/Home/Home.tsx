@@ -4,7 +4,6 @@ import Card from "antd/es/card/Card";
 import { theme } from "../../theme";
 import { List, Tag, Typography } from "antd";
 import api from "../../services/api";
-import dayjs from "dayjs";
 import { errorActions } from "../../utils/errorActions";
 import { currency } from "../../utils";
 import {
@@ -14,6 +13,7 @@ import {
   Legend,
 } from "chart.js";
 import { Pie } from "react-chartjs-2";
+import moment from "moment";
 
 ChartJS.register(ArcElement, ToolChart, Legend);
 const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
@@ -62,7 +62,7 @@ export const Home: React.FC = () => {
     const cache = localStorage.getItem("items_in_cache");
     if (cache) {
       const { items, date } = JSON.parse(cache);
-      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
         setItems(items);
         setLoadingItems(false);
         return;
@@ -76,7 +76,7 @@ export const Home: React.FC = () => {
           "items_in_cache",
           JSON.stringify({
             items: response.data,
-            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+            date: moment().format("DDMMYYYY HH:mm:ss"),
           })
         );
       })
@@ -94,13 +94,13 @@ export const Home: React.FC = () => {
     if (cache) {
       const { boletos, date } = JSON.parse(cache);
       if (
-        dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
+        moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
       ) {
         setBillResume({
           open: boletos.filter((boleto: Boleto) => {
             return (
               boleto.DHBAIXA === null &&
-              dayjs(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(dayjs())
+              moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(moment())
             );
           }).length,
           paid: boletos.filter((x: Boleto) => {
@@ -109,7 +109,7 @@ export const Home: React.FC = () => {
           due: boletos.filter((boleto: Boleto) => {
             return (
               boleto.DHBAIXA === null &&
-              dayjs(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(dayjs())
+              moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(moment())
             );
           }).length,
           total: boletos.length,
@@ -125,7 +125,7 @@ export const Home: React.FC = () => {
           open: response.data.filter((boleto: Boleto) => {
             return (
               boleto.DHBAIXA === null &&
-              dayjs(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(dayjs())
+              moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(moment())
             );
           }).length,
           paid: response.data.filter((x: Boleto) => {
@@ -134,7 +134,7 @@ export const Home: React.FC = () => {
           due: response.data.filter((boleto: Boleto) => {
             return (
               boleto.DHBAIXA === null &&
-              dayjs(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(dayjs())
+              moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(moment())
             );
           }).length,
           total: response.data.length,
@@ -143,7 +143,7 @@ export const Home: React.FC = () => {
           "boletos_in_cache",
           JSON.stringify({
             boletos: response.data,
-            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+            date: moment().format("DDMMYYYY HH:mm:ss"),
           })
         );
       })
@@ -315,7 +315,7 @@ export const Home: React.FC = () => {
                       }}
                     >
                       <span>
-                        {dayjs(item.date, "DDMMYYYY").format("DD/MM/YYYY")}
+                        {moment(item.date, "DDMMYYYY HH:mm:ss").format("DD/MM/YYYY")}
                       </span>
                       <Tag color={"green"}>
                         {item.category.length > 15

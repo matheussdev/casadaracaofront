@@ -3,9 +3,9 @@ import { GlobalWrapper } from "../../components/GlobalWrapper";
 import { Avatar, Button, List, Tag, Typography } from "antd";
 import api from "../../services/api";
 import { errorActions } from "../../utils/errorActions";
-import dayjs from "dayjs";
 import { FaFileSignature } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import moment from "moment";
 const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
 
 const { Title } = Typography;
@@ -31,7 +31,7 @@ export const Assinaturas: React.FC = () => {
     const cache = localStorage.getItem("contracts_in_cache");
     if (cache) {
       const { contracts, date } = JSON.parse(cache);
-      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
         setContracts(contracts);
         setRefreshing(false);
         return;
@@ -45,7 +45,7 @@ export const Assinaturas: React.FC = () => {
           "contracts_in_cache",
           JSON.stringify({
             contracts: response.data,
-            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+            date: moment().format("DDMMYYYY HH:mm:ss"),
           })
         );
       })
@@ -132,7 +132,7 @@ export const Assinaturas: React.FC = () => {
                     }}
                   >
                     <span>
-                      {dayjs(item.date, "DDMMYYYY").format("DD/MM/YYYY")}
+                      {moment(item.date, "DDMMYYYY HH:mm:ss").format("DD/MM/YYYY")}
                     </span>
                     <Tag color={item.status !== "F" ? "green" : "blue"}>
                       {item.status !== "F" ? "Assinado" : "Pendente"}

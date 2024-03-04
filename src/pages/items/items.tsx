@@ -5,7 +5,6 @@ import Card from "antd/es/card/Card";
 import { theme } from "../../theme";
 import { Typography } from "antd";
 import api from "../../services/api";
-import dayjs from "dayjs";
 import { errorActions } from "../../utils/errorActions";
 import {
   Chart as ChartJS,
@@ -20,6 +19,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line, Pie } from "react-chartjs-2";
+import moment from "moment";
 
 ChartJS.register(
   ArcElement,
@@ -126,7 +126,7 @@ export const Items: React.FC = () => {
     const cache = localStorage.getItem("items_in_cache");
     if (cache) {
       const { items, date } = JSON.parse(cache);
-      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
         setItems(items);
         setLoadingItems(false);
         return;
@@ -140,7 +140,7 @@ export const Items: React.FC = () => {
           "items_in_cache",
           JSON.stringify({
             items: response.data,
-            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+            date: moment().format("DDMMYYYY HH:mm:ss"),
           })
         );
       })
@@ -164,7 +164,7 @@ export const Items: React.FC = () => {
     );
 
     const labels = sortedDates.map((date) =>
-      dayjs(date, "DDMMYYYY HH:mm:ss").format("DD/MM/YY")
+    moment(date, "DDMMYYYY HH:mm:ss").format("DD/MM/YY")
     );
 
     const data = sortedDates.map((date) => groupedBoletos[date]);
@@ -188,7 +188,7 @@ export const Items: React.FC = () => {
     const cache = localStorage.getItem("boletos_in_cache");
     if (cache) {
       const { boletos, date } = JSON.parse(cache);
-      if (dayjs().diff(dayjs(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
         setBoletos(boletos);
         setLoadingBills(false);
         return;
@@ -202,7 +202,7 @@ export const Items: React.FC = () => {
           "boletos_in_cache",
           JSON.stringify({
             boletos: response.data,
-            date: dayjs().format("DDMMYYYY HH:mm:ss"),
+            date: moment().format("DDMMYYYY HH:mm:ss"),
           })
         );
       })
