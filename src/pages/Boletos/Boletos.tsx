@@ -13,7 +13,7 @@ import api from "../../services/api";
 import { errorActions } from "../../utils/errorActions";
 import { currency } from "../../utils";
 import { FaFileInvoiceDollar } from "react-icons/fa";
-import moment from "moment";
+import moment from "moment"; 
 import {
   AlertOutlined,
   CopyOutlined,
