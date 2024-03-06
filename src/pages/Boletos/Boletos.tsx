@@ -108,7 +108,6 @@ export const Boletos: React.FC = () => {
             link.href = `${
               import.meta.env.VITE_API_URL
             }/contrato/boleto/${NUFIN}`;
-            link.setAttribute("target", "_blank");
             document.body.appendChild(link);
             link.click();
           } else {
