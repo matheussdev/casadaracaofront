@@ -85,7 +85,6 @@ export const Home: React.FC = () => {
         setLoadingItems(false);
       });
   }, []);
-  const [width, setWidth] = React.useState(window.innerWidth);
   const getBoletos = useCallback(() => {
     setLoadingBills(true);
     const cache = localStorage.getItem("boletos_in_cache");
@@ -157,16 +156,6 @@ export const Home: React.FC = () => {
         setLoadingBills(false);
       });
   }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWidth(window.innerWidth);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
   const hasUpdated = React.useRef(false);
   useEffect(() => {
     if (!hasUpdated.current) {
@@ -195,21 +184,13 @@ export const Home: React.FC = () => {
           <div
             style={{
               position: "absolute",
-              bottom: -((44 / 375)  * width),
+              width: "100%",
+              bottom: -40,
+              height: 40,
+              borderRadius: "0 0 100% 100%",
+              backgroundColor: theme.token.colorPrimary,
             }}
           >
-            <svg
-              width={"100%"}
-              height={((44 / 375)  * width)}
-              viewBox="0 0 375 44"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M388 0.499893C388 24.5243 298.233 43.9999 187.5 43.9999C76.7669 43.9999 -13 24.5243 -13 0.499893L187.5 0.499954L388 0.499893Z"
-                fill="#01408C"
-              />
-            </svg>
           </div>
         </div>
         <div
