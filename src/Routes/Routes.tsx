@@ -13,6 +13,7 @@ import { Assinaturas } from "../pages/Assinaturas";
 import { AssinaturaDetail } from "../pages/AssinaturaDetail";
 import { Items } from "../pages/items";
 import { Register } from "../pages/Register";
+import { Conta } from "../pages/Conta";
 
 interface MiddlewareProps {
   children: React.ReactNode;
@@ -78,6 +79,16 @@ export const sidebarItems = [
     private: true,
     show: true,
     component: <Notas />,
+  },
+  {
+    title: "Conta",
+    icon: (selected: boolean) => (
+      <SiGoogledocs color={selected ? theme.token.orange : "#fff"} size={25} />
+    ),
+    route: "/Conta",
+    private: true,
+    show: true,
+    component: <Conta />,
   },
 ];
 

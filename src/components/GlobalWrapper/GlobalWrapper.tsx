@@ -136,11 +136,18 @@ export const GlobalWrapper: React.FC<GlobalWrapperProps> = ({ children }) => {
               menu={{
                 items: [
                   {
+                    label: "Minha Conta",
+                    onClick: () => navigate('/conta'),
+                    key: "2",
+                    icon: <FaUserCircle size={16} />,
+                  },
+                  {
                     label: "Sair",
                     onClick: () => logout(),
                     key: "1",
                     icon: <FaSignOutAlt size={16} />,
                   },
+                  
                 ],
               }}
               trigger={["click"]}
