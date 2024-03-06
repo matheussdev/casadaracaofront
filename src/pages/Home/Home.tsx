@@ -85,7 +85,7 @@ export const Home: React.FC = () => {
         setLoadingItems(false);
       });
   }, []);
-
+  const [width, setWidth] = React.useState(window.innerWidth);
   const getBoletos = useCallback(() => {
     setLoadingBills(true);
     const cache = localStorage.getItem("boletos_in_cache");
@@ -157,6 +157,16 @@ export const Home: React.FC = () => {
         setLoadingBills(false);
       });
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWidth(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   const hasUpdated = React.useRef(false);
   useEffect(() => {
     if (!hasUpdated.current) {
@@ -185,12 +195,12 @@ export const Home: React.FC = () => {
           <div
             style={{
               position: "absolute",
-              bottom: -((44 / 375) * window.innerWidth),
+              bottom: -((44 / 375)  * width),
             }}
           >
             <svg
               width={"100%"}
-              height={(44 / 375) * window.innerWidth}
+              height={((44 / 375)  * width)}
               viewBox="0 0 375 44"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
