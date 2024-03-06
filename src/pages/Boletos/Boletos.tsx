@@ -60,8 +60,8 @@ export const Boletos: React.FC = () => {
   const [boletos, setBoletos] = useState<Boleto[]>([]);
   const [fileredBoletos, setFileredBoletos] = useState<Boleto[]>([]);
   const [billLoading, setBillLoading] = useState<number[]>([]);
-  const [initialDate, setInitialDate] = useState<string>("");
-  const [finalDate, setFinalDate] = useState<string>("");
+  const [initialDate, setInitialDate] = useState("");
+  const [finalDate, setFinalDate] = useState("");
   const getBoletos = useCallback(() => {
     setLoadingBills(true);
     const cache = localStorage.getItem("boletos_in_cache");
@@ -221,7 +221,7 @@ export const Boletos: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data inicial"
-            onChange={(_, dateString) => setInitialDate(dateString)}
+            onChange={(_, dateString) => setInitialDate(dateString as string)}
           />
           <DatePicker
             format={"DD/MM/YYYY"}
@@ -231,7 +231,7 @@ export const Boletos: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data final"
-            onChange={(_, dateString) => setFinalDate(dateString)}
+            onChange={(_, dateString) => setFinalDate(dateString as string)}
           />
         </div>
         <List

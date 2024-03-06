@@ -182,7 +182,7 @@ export const Notas: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data inicial"
-            onChange={(_, dateString) => setInitialDate(dateString)}
+            onChange={(_, dateString) => setInitialDate(dateString as string)}
           />
           <DatePicker
             format={"DD/MM/YYYY"}
@@ -192,7 +192,7 @@ export const Notas: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data final"
-            onChange={(_, dateString) => setFinalDate(dateString)}
+            onChange={(_, dateString) => setFinalDate(dateString as string)}
           />
         </div>
         <List
