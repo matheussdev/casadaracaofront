@@ -69,6 +69,12 @@ export const Items: React.FC = () => {
   const [boletos, setBoletos] = React.useState<Boleto[]>([]);
   const [loadingItems, setLoadingItems] = React.useState(false);
   const [items, setItems] = React.useState<Item[]>([]);
+  const [billResume, setBillResume] = React.useState({
+    open: 0,
+    paid: 0,
+    due: 0,
+    total: 0,
+  });
   const countGroups = (
     items: Item[]
   ): Record<string, { count: number; totalValue: number }> => {
@@ -126,7 +132,9 @@ export const Items: React.FC = () => {
     const cache = localStorage.getItem("items_in_cache");
     if (cache) {
       const { items, date } = JSON.parse(cache);
-      if (moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (
+        moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
+      ) {
         setItems(items);
         setLoadingItems(false);
         return;
@@ -164,7 +172,7 @@ export const Items: React.FC = () => {
     );
 
     const labels = sortedDates.map((date) =>
-    moment(date, "DDMMYYYY HH:mm:ss").format("DD/MM/YY")
+      moment(date, "DDMMYYYY HH:mm:ss").format("DD/MM/YY")
     );
 
     const data = sortedDates.map((date) => groupedBoletos[date]);
@@ -183,13 +191,37 @@ export const Items: React.FC = () => {
     };
   };
 
+  const billsResume = useCallback((bills: Boleto[]) => {
+    setBillResume({
+      open: bills.filter((boleto: Boleto) => {
+        return (
+          boleto.DHBAIXA === null &&
+          moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(moment())
+        );
+      }).length,
+      paid: bills.filter((x: Boleto) => {
+        return x.DHBAIXA !== null;
+      }).length,
+      due: bills.filter((boleto: Boleto) => {
+        return (
+          boleto.DHBAIXA === null &&
+          moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(moment())
+        );
+      }).length,
+      total: bills.length,
+    });
+  }, []);
+
   const getBoletos = useCallback(() => {
     setLoadingBills(true);
     const cache = localStorage.getItem("boletos_in_cache");
     if (cache) {
       const { boletos, date } = JSON.parse(cache);
-      if (moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (
+        moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
+      ) {
         setBoletos(boletos);
+        billsResume(boletos);
         setLoadingBills(false);
         return;
       }
@@ -198,6 +230,7 @@ export const Items: React.FC = () => {
       .get("/boleto/")
       .then((response) => {
         setBoletos(response.data);
+        billsResume(response.data);
         localStorage.setItem(
           "boletos_in_cache",
           JSON.stringify({
@@ -213,7 +246,7 @@ export const Items: React.FC = () => {
       .finally(() => {
         setLoadingBills(false);
       });
-  }, []);
+  }, [billsResume]);
 
   const hasUpdated = React.useRef(false);
 
@@ -222,7 +255,6 @@ export const Items: React.FC = () => {
       hasUpdated.current = true;
       getBoletos();
       getItems();
-      return;
     }
   }, [getBoletos, getItems]);
 
@@ -265,6 +297,8 @@ export const Items: React.FC = () => {
         <div
           style={{
             padding: "32px 16px 24px",
+            display: "grid",
+            gap: "16px",
           }}
         >
           <Card
@@ -320,12 +354,67 @@ export const Items: React.FC = () => {
               padding: "14px 16px",
               display: "flex",
               flexDirection: "column",
-              height: "200px",
+              height: "180px",
             }}
             style={{
               borderRadius: "22px",
               boxShadow: "0px 4px 17px 2px rgba(0, 0, 0, 0.10)",
-              marginTop: "16px",
+            }}
+          >
+            <Title
+              level={4}
+              style={{
+                color: "#A0AEC0",
+                fontWeight: 700,
+                margin: 0,
+                position: "absolute",
+              }}
+            >
+              Boletos
+            </Title>
+            <Pie
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: {
+                    position: "left",
+                    labels: {
+                      boxWidth: 12,
+                      boxHeight: 12,
+                      font: {
+                        size: 12,
+                      },
+                    },
+                  },
+                },
+              }}
+              data={{
+                labels: ["Pagos", "A vencer", "Vencidos"],
+                datasets: [
+                  {
+                    label: "Boletos",
+                    data: [billResume.paid, billResume.open, billResume.due],
+                    backgroundColor: ["#64C280", "#4299E1", "#E53E3E"],
+                    borderColor: ["#64C280", "#4299E1", "#E53E3E"],
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+            />
+          </Card>
+          <Card
+            loading={loadingBills}
+            bodyStyle={{
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              height: "200px",
+              paddingBottom: "40px",
+            }}
+            style={{
+              borderRadius: "22px",
+              boxShadow: "0px 4px 17px 2px rgba(0, 0, 0, 0.10)",
             }}
           >
             <Title

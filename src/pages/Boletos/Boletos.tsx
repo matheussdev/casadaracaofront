@@ -14,7 +14,11 @@ import { errorActions } from "../../utils/errorActions";
 import { currency } from "../../utils";
 import { FaFileInvoiceDollar } from "react-icons/fa";
 import moment from "moment";
-import { AlertOutlined, DownloadOutlined } from "@ant-design/icons";
+import {
+  AlertOutlined,
+  CopyOutlined,
+  DownloadOutlined,
+} from "@ant-design/icons";
 const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
 function verifyStatusByDate(date: string, pago?: string) {
   if (pago) {
@@ -217,7 +221,7 @@ export const Boletos: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data inicial"
-            onChange={(date, dateString) => setInitialDate(dateString)}
+            onChange={(_, dateString) => setInitialDate(dateString)}
           />
           <DatePicker
             format={"DD/MM/YYYY"}
@@ -227,7 +231,7 @@ export const Boletos: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data final"
-            onChange={(date, dateString) => setFinalDate(dateString)}
+            onChange={(_, dateString) => setFinalDate(dateString)}
           />
         </div>
         <List
@@ -238,6 +242,7 @@ export const Boletos: React.FC = () => {
               valor: item.VLRDESDOB,
               dhbaixa: item.DHBAIXA,
               NUFIN: item.NUFIN,
+              linhaDigitavel: item.LINHADIGITAVEL,
             };
           })}
           loading={loadingBills}
@@ -246,6 +251,7 @@ export const Boletos: React.FC = () => {
             valor: number;
             dhbaixa?: string;
             NUFIN: number;
+            linhaDigitavel: string;
           }) => (
             <List.Item
               actions={[
@@ -258,12 +264,25 @@ export const Boletos: React.FC = () => {
                 <Button
                   // type="primary"
                   key={"download"}
+                  shape="circle"
                   icon={<DownloadOutlined />}
                   loading={billLoading.includes(item.NUFIN)}
                   onClick={() => handleDownload(item.NUFIN)}
                 >
-                  Baixar Boleto
                 </Button>,
+                <Button
+                  icon={<CopyOutlined />}
+                  key={"copy"}
+                  onClick={() => {
+                    navigator.clipboard.writeText(item.linhaDigitavel.toString());
+                    message.success({
+                      content: "Linha digitável copiada!",
+                      icon: <CopyOutlined />,
+                    });
+                  }}
+                  type="dashed"
+                  shape="circle"
+                ></Button>,
               ]}
             >
               <List.Item.Meta

@@ -73,49 +73,78 @@ export const Notas: React.FC = () => {
   useEffect(() => {
     if (initialDate && finalDate) {
       setFilteredNotas(
-        notas.filter((item) => {
-          return (
-            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isBetween(
-              moment(initialDate, "DD/MM/YYYY"),
-              moment(finalDate, "DD/MM/YYYY")
-            ) ||
-            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
-              moment(initialDate, "DD/MM/YYYY")
-            ) ||
-            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
-              moment(finalDate, "DD/MM/YYYY")
-            )
-          );
-        })
+        notas
+          .filter((item) => {
+            return (
+              moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isBetween(
+                moment(initialDate, "DD/MM/YYYY"),
+                moment(finalDate, "DD/MM/YYYY")
+              ) ||
+              moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+                moment(initialDate, "DD/MM/YYYY")
+              ) ||
+              moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+                moment(finalDate, "DD/MM/YYYY")
+              )
+            );
+          })
+          .sort((a, b) => {
+            return (
+              moment(b.DTNEG, "DDMMYYYY HH:mm:ss").unix() -
+              moment(a.DTNEG, "DDMMYYYY HH:mm:ss").unix()
+            );
+          })
       );
     } else if (initialDate) {
       setFilteredNotas(
-        notas.filter((item) => {
-          return (
-            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isAfter(
-              moment(initialDate, "DD/MM/YYYY")
-            ) ||
-            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
-              moment(initialDate, "DD/MM/YYYY")
-            )
-          );
-        })
+        notas
+          .filter((item) => {
+            return (
+              moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isAfter(
+                moment(initialDate, "DD/MM/YYYY")
+              ) ||
+              moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+                moment(initialDate, "DD/MM/YYYY")
+              )
+            );
+          })
+          .sort((a, b) => {
+            return (
+              moment(b.DTNEG, "DDMMYYYY HH:mm:ss").unix() -
+              moment(a.DTNEG, "DDMMYYYY HH:mm:ss").unix()
+            );
+          })
       );
     } else if (finalDate) {
       setFilteredNotas(
-        notas.filter((item) => {
-          return (
-            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isBefore(
-              moment(finalDate, "DD/MM/YYYY")
-            ) ||
-            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
-              moment(finalDate, "DD/MM/YYYY")
-            )
-          );
-        })
+        notas
+          .filter((item) => {
+            return (
+              moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isBefore(
+                moment(finalDate, "DD/MM/YYYY")
+              ) ||
+              moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+                moment(finalDate, "DD/MM/YYYY")
+              )
+            );
+          })
+          .sort((a, b) => {
+            return (
+              moment(b.DTNEG, "DDMMYYYY HH:mm:ss").unix() -
+              moment(a.DTNEG, "DDMMYYYY HH:mm:ss").unix()
+            );
+          })
       );
     } else {
-      setFilteredNotas(notas);
+      const newNotes = notas
+      
+      newNotes.sort((a, b) => {
+        return (
+          moment(b.DTNEG, "DDMMYYYY HH:mm:ss").unix() -
+          moment(a.DTNEG, "DDMMYYYY HH:mm:ss").unix()
+        );
+      });
+      setFilteredNotas(newNotes);
     }
   }, [notas, initialDate, finalDate]);
 
@@ -153,7 +182,7 @@ export const Notas: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data inicial"
-            onChange={(date, dateString) => setInitialDate(dateString)}
+            onChange={(_, dateString) => setInitialDate(dateString)}
           />
           <DatePicker
             format={"DD/MM/YYYY"}
@@ -163,28 +192,21 @@ export const Notas: React.FC = () => {
               width: "100%",
             }}
             placeholder="Data final"
-            onChange={(date, dateString) => setFinalDate(dateString)}
+            onChange={(_, dateString) => setFinalDate(dateString)}
           />
         </div>
         <List
           itemLayout="horizontal"
-          dataSource={filteredNotas
-            .sort((a, b) => {
-              return (
-                moment(b.DTNEG, "DDMMYYYY HH:mm:ss").unix() -
-                moment(a.DTNEG, "DDMMYYYY HH:mm:ss").unix()
-              );
-            })
-            .map((item: Nota) => {
-              return {
-                date: item.DTNEG,
-                valor: Number(
-                  item.XMLENVCLI.split("<vNF>")[1].split("</vNF>")[0]
-                ),
-                base64: item.base64,
-                NUNOTA: item.NUNOTA,
-              };
-            })}
+          dataSource={filteredNotas.map((item: Nota) => {
+            return {
+              date: item.DTNEG,
+              valor: Number(
+                item.XMLENVCLI.split("<vNF>")[1].split("</vNF>")[0]
+              ),
+              base64: item.base64,
+              NUNOTA: item.NUNOTA,
+            };
+          })}
           loading={refreshing}
           renderItem={(item: {
             valor: number;
@@ -195,10 +217,8 @@ export const Notas: React.FC = () => {
             <List.Item
               actions={[
                 <Button
-                  type="primary"
                   key={"download"}
                   icon={<DownloadOutlined />}
-                  size="large"
                   loading={noteLoading.includes(item.NUNOTA)}
                   onClick={() => {
                     setNoteLoading([...noteLoading, item.NUNOTA]);

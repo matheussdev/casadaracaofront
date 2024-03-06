@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { GlobalWrapper } from "../../components/GlobalWrapper";
 import Card from "antd/es/card/Card";
 import { theme } from "../../theme";
-import { List, Tag, Typography } from "antd";
+import { List, Statistic, Tag, Typography } from "antd";
 import api from "../../services/api";
 import { errorActions } from "../../utils/errorActions";
 import { currency } from "../../utils";
@@ -12,8 +12,8 @@ import {
   Tooltip as ToolChart,
   Legend,
 } from "chart.js";
-import { Pie } from "react-chartjs-2";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 
 ChartJS.register(ArcElement, ToolChart, Legend);
 const time_cache = import.meta.env.VITE_TIME_CACHE || 5;
@@ -48,21 +48,19 @@ interface Item {
 }
 export const Home: React.FC = () => {
   const [loadingBills, setLoadingBills] = React.useState(false);
-  const [billResume, setBillResume] = React.useState({
-    open: 0,
-    paid: 0,
-    due: 0,
-    total: 0,
-  });
+  const [openBillsTotal, setOpenBillsTotal] = React.useState(0);
+  const [openBills, setOpenBills] = React.useState(0);
   const [loadingItems, setLoadingItems] = React.useState(false);
   const [items, setItems] = React.useState<Item[]>([]);
-
+  const navigate = useNavigate();
   const getItems = useCallback(() => {
     setLoadingItems(true);
     const cache = localStorage.getItem("items_in_cache");
     if (cache) {
       const { items, date } = JSON.parse(cache);
-      if (moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache) {
+      if (
+        moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
+      ) {
         setItems(items);
         setLoadingItems(false);
         return;
@@ -96,24 +94,26 @@ export const Home: React.FC = () => {
       if (
         moment().diff(moment(date, "DDMMYYYY HH:mm:ss"), "minute") < time_cache
       ) {
-        setBillResume({
-          open: boletos.filter((boleto: Boleto) => {
+        setOpenBillsTotal(
+          boletos
+            .filter((boleto: Boleto) => {
+              return (
+                boleto.DHBAIXA === null &&
+                moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(moment())
+              );
+            })
+            .reduce((acc: number, boleto: Boleto) => {
+              return acc + boleto.VLRDESDOB;
+            }, 0)
+        );
+        setOpenBills(
+          boletos.filter((boleto: Boleto) => {
             return (
               boleto.DHBAIXA === null &&
               moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(moment())
             );
-          }).length,
-          paid: boletos.filter((x: Boleto) => {
-            return x.DHBAIXA !== null;
-          }).length,
-          due: boletos.filter((boleto: Boleto) => {
-            return (
-              boleto.DHBAIXA === null &&
-              moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(moment())
-            );
-          }).length,
-          total: boletos.length,
-        });
+          }).length
+        );
         setLoadingBills(false);
         return;
       }
@@ -121,24 +121,26 @@ export const Home: React.FC = () => {
     api
       .get("/boleto/")
       .then((response) => {
-        setBillResume({
-          open: response.data.filter((boleto: Boleto) => {
+        setOpenBillsTotal(
+          response.data
+            .filter((boleto: Boleto) => {
+              return (
+                boleto.DHBAIXA === null &&
+                moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(moment())
+              );
+            })
+            .reduce((acc: number, boleto: Boleto) => {
+              return acc + boleto.VLRDESDOB;
+            }, 0)
+        );
+        setOpenBills(
+          response.data.filter((boleto: Boleto) => {
             return (
               boleto.DHBAIXA === null &&
               moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isAfter(moment())
             );
-          }).length,
-          paid: response.data.filter((x: Boleto) => {
-            return x.DHBAIXA !== null;
-          }).length,
-          due: response.data.filter((boleto: Boleto) => {
-            return (
-              boleto.DHBAIXA === null &&
-              moment(boleto.DTVENC, "DDMMYYYY HH:mm:ss").isBefore(moment())
-            );
-          }).length,
-          total: response.data.length,
-        });
+          }).length
+        );
         localStorage.setItem(
           "boletos_in_cache",
           JSON.stringify({
@@ -155,10 +157,13 @@ export const Home: React.FC = () => {
         setLoadingBills(false);
       });
   }, []);
-
+  const hasUpdated = React.useRef(false);
   useEffect(() => {
-    getBoletos();
-    getItems();
+    if (!hasUpdated.current) {
+      hasUpdated.current = true;
+      getBoletos();
+      getItems();
+    }
   }, [getBoletos, getItems]);
 
   return (
@@ -173,7 +178,7 @@ export const Home: React.FC = () => {
           style={{
             position: "absolute",
             width: "100%",
-            height: "100px",
+            height: "40px",
             backgroundColor: theme.token.colorPrimary,
           }}
         >
@@ -200,61 +205,52 @@ export const Home: React.FC = () => {
         <div
           style={{
             padding: "32px 16px 0",
+            display: "flex",
+            gap: "16px",
           }}
         >
           <Card
+            onClick={() => navigate("/boletos")}
             loading={loadingBills}
             bodyStyle={{
               padding: "14px 16px",
               display: "flex",
               flexDirection: "column",
-              height: "180px",
             }}
             style={{
               borderRadius: "22px",
               boxShadow: "0px 4px 17px 2px rgba(0, 0, 0, 0.10)",
+              width: "100%",
             }}
+            bordered={false}
           >
-            <Title
-              level={4}
-              style={{
-                color: "#A0AEC0",
-                fontWeight: 700,
-                margin: 0,
-                position: "absolute",
-              }}
-            >
-              Boletos
-            </Title>
-            <Pie
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: "left",
-                    labels: {
-                      boxWidth: 12,
-                      boxHeight: 12,
-                      font: {
-                        size: 12,
-                      },
-                    },
-                  },
-                },
-              }}
-              data={{
-                labels: ["Pagos", "A vencer", "Vencidos"],
-                datasets: [
-                  {
-                    label: "Boletos",
-                    data: [billResume.paid, billResume.open, billResume.due],
-                    backgroundColor: ["#64C280", "#4299E1", "#E53E3E"],
-                    borderColor: ["#64C280", "#4299E1", "#E53E3E"],
-                    borderWidth: 1,
-                  },
-                ],
-              }}
+            <Statistic
+              title="Boletos em aberto"
+              value={openBills}
+              precision={0}
+              valueStyle={{ color: "#3182CE", fontWeight: 700 }}
+            />
+          </Card>
+          <Card
+            onClick={() => navigate("/boletos")}
+            loading={loadingBills}
+            bodyStyle={{
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+            }}
+            style={{
+              width: "100%",
+              borderRadius: "22px",
+              boxShadow: "0px 4px 17px 2px rgba(0, 0, 0, 0.10)",
+            }}
+            bordered={false}
+          >
+            <Statistic
+              title="Total a pagar (R$)"
+              value={currency(openBillsTotal)}
+              precision={2}
+              valueStyle={{ color: "#3f8600", fontWeight: 700 }}
             />
           </Card>
         </div>
@@ -315,7 +311,9 @@ export const Home: React.FC = () => {
                       }}
                     >
                       <span>
-                        {moment(item.date, "DDMMYYYY HH:mm:ss").format("DD/MM/YYYY")}
+                        {moment(item.date, "DDMMYYYY HH:mm:ss").format(
+                          "DD/MM/YYYY"
+                        )}
                       </span>
                       <Tag color={"green"}>
                         {item.category.length > 15
