@@ -21,7 +21,7 @@ export const Login: React.FC = () => {
       password: e.password,
     })
       .then(() => {
-        navigate("/");
+        navigate("/home");
       })
       .catch((error) => {
         setError(error || "Erro ao logar!");

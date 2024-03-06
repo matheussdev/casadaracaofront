@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GlobalWrapper } from "../../components/GlobalWrapper";
-import { Avatar, Button, List, Typography, message } from "antd";
+import { Avatar, Button, DatePicker, List, Typography, message } from "antd";
 import api from "../../services/api";
 import { errorActions } from "../../utils/errorActions";
 import { currency } from "../../utils";
@@ -26,35 +26,9 @@ export const Notas: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [noteLoading, setNoteLoading] = useState<number[]>([]);
-  // const openPdf = (base64: string) => {
-  //   // Converte a string Base64 em um Blob
-  //   const blob = b64toBlob(base64, "application/pdf");
-  //   // Cria uma URL a partir do Blob
-  //   const blobUrl = URL.createObjectURL(blob);
-  //   // Abre a URL em uma nova aba
-  //   window.open(blobUrl, "_blank");
-  // };
-
-  // const b64toBlob = (b64Data: string, contentType = "", sliceSize = 512) => {
-  //   const byteCharacters = atob(b64Data);
-  //   const byteArrays = [];
-
-  //   for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-  //     const slice = byteCharacters.slice(offset, offset + sliceSize);
-
-  //     const byteNumbers = new Array(slice.length);
-  //     for (let i = 0; i < slice.length; i++) {
-  //       byteNumbers[i] = slice.charCodeAt(i);
-  //     }
-
-  //     const byteArray = new Uint8Array(byteNumbers);
-  //     byteArrays.push(byteArray);
-  //   }
-
-  //   const blob = new Blob(byteArrays, { type: contentType });
-  //   return blob;
-  // };
-
+  const [filteredNotas, setFilteredNotas] = useState<Nota[]>([]);
+  const [initialDate, setInitialDate] = useState<string>("");
+  const [finalDate, setFinalDate] = useState<string>("");
   const getNotas = useCallback(() => {
     setRefreshing(true);
     const cache = localStorage.getItem("notas_in_cache");
@@ -93,9 +67,57 @@ export const Notas: React.FC = () => {
     if (!hasUpdated.current) {
       hasUpdated.current = true;
       getNotas();
-      return;
     }
   }, [getNotas]);
+
+  useEffect(() => {
+    if (initialDate && finalDate) {
+      setFilteredNotas(
+        notas.filter((item) => {
+          return (
+            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isBetween(
+              moment(initialDate, "DD/MM/YYYY"),
+              moment(finalDate, "DD/MM/YYYY")
+            ) ||
+            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+              moment(initialDate, "DD/MM/YYYY")
+            ) ||
+            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+              moment(finalDate, "DD/MM/YYYY")
+            )
+          );
+        })
+      );
+    } else if (initialDate) {
+      setFilteredNotas(
+        notas.filter((item) => {
+          return (
+            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isAfter(
+              moment(initialDate, "DD/MM/YYYY")
+            ) ||
+            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+              moment(initialDate, "DD/MM/YYYY")
+            )
+          );
+        })
+      );
+    } else if (finalDate) {
+      setFilteredNotas(
+        notas.filter((item) => {
+          return (
+            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isBefore(
+              moment(finalDate, "DD/MM/YYYY")
+            ) ||
+            moment(item.DTNEG, "DDMMYYYY HH:mm:ss").isSame(
+              moment(finalDate, "DD/MM/YYYY")
+            )
+          );
+        })
+      );
+    } else {
+      setFilteredNotas(notas);
+    }
+  }, [notas, initialDate, finalDate]);
 
   return (
     <GlobalWrapper>
@@ -116,18 +138,53 @@ export const Notas: React.FC = () => {
             Minhas notas
           </Title>
         </div>
+        <div
+          style={{
+            display: "flex",
+            marginBottom: 16,
+            gap: 16,
+          }}
+        >
+          <DatePicker
+            format={"DD/MM/YYYY"}
+            size="large"
+            allowClear
+            style={{
+              width: "100%",
+            }}
+            placeholder="Data inicial"
+            onChange={(date, dateString) => setInitialDate(dateString)}
+          />
+          <DatePicker
+            format={"DD/MM/YYYY"}
+            size="large"
+            allowClear
+            style={{
+              width: "100%",
+            }}
+            placeholder="Data final"
+            onChange={(date, dateString) => setFinalDate(dateString)}
+          />
+        </div>
         <List
           itemLayout="horizontal"
-          dataSource={notas.map((item: Nota) => {
-            return {
-              date: item.DTNEG,
-              valor: Number(
-                item.XMLENVCLI.split("<vNF>")[1].split("</vNF>")[0]
-              ),
-              base64: item.base64,
-              NUNOTA: item.NUNOTA,
-            };
-          })}
+          dataSource={filteredNotas
+            .sort((a, b) => {
+              return (
+                moment(b.DTNEG, "DDMMYYYY HH:mm:ss").unix() -
+                moment(a.DTNEG, "DDMMYYYY HH:mm:ss").unix()
+              );
+            })
+            .map((item: Nota) => {
+              return {
+                date: item.DTNEG,
+                valor: Number(
+                  item.XMLENVCLI.split("<vNF>")[1].split("</vNF>")[0]
+                ),
+                base64: item.base64,
+                NUNOTA: item.NUNOTA,
+              };
+            })}
           loading={refreshing}
           renderItem={(item: {
             valor: number;
@@ -150,9 +207,9 @@ export const Notas: React.FC = () => {
                       .then((response) => {
                         if (response.data) {
                           const link = document.createElement("a");
-                          link.href = `${import.meta.env.VITE_API_URL}/contrato/note/${
-                            item.NUNOTA
-                          }`;
+                          link.href = `${
+                            import.meta.env.VITE_API_URL
+                          }/contrato/note/${item.NUNOTA}`;
                           document.body.appendChild(link);
                           link.click();
                         } else {
@@ -194,7 +251,9 @@ export const Notas: React.FC = () => {
                   />
                 }
                 title={currency(item.valor)}
-                description={moment(item.date, "DDMMYYYY HH:mm:ss").format("DD/MM/YYYY")}
+                description={moment(item.date, "DDMMYYYY HH:mm:ss").format(
+                  "DD/MM/YYYY"
+                )}
               />
             </List.Item>
           )}
